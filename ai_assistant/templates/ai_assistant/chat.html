@@ -1,0 +1,233 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<style>
+    .ai-chat-wrapper { max-width: 920px; margin: 0 auto; height: calc(100vh - 100px); display: flex; flex-direction: column; padding: 20px; }
+
+    .ai-chat-header { text-align: center; padding: 16px 0 10px; }
+    .ai-chat-header__icon { font-size: 38px; display: block; margin-bottom: 4px; animation: pulse-glow 2s ease-in-out infinite; }
+    @keyframes pulse-glow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    .ai-chat-header h2 { margin: 0; font-size: 22px; font-weight: 700; color: var(--oh-text-color, #1c1c1c); }
+    .ai-chat-header p { margin: 4px 0 0; font-size: 13px; color: #888; }
+
+    /* Nav tabs */
+    .ai-nav { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+    .ai-nav a {
+        padding: 6px 18px; border-radius: 20px; font-size: 12.5px; text-decoration: none;
+        border: 1px solid #e0e0e0; color: #555; transition: all .2s;
+    }
+    .ai-nav a:hover, .ai-nav a.active { background: #e54f37; color: #fff; border-color: #e54f37; }
+
+    /* Capability Cards */
+    .ai-capabilities { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; margin-bottom: 12px; }
+    .ai-cap-card {
+        display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+        border: 1px solid #eee; border-radius: 10px; background: #fafafa;
+        cursor: pointer; transition: all .2s; font-size: 12px;
+    }
+    .ai-cap-card:hover { border-color: #e54f37; background: #fff5f3; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(229,79,55,.12); }
+    .ai-cap-card__icon { font-size: 20px; flex-shrink: 0; }
+    .ai-cap-card strong { display: block; font-size: 12px; color: #222; }
+    .ai-cap-card span { color: #888; font-size: 11px; }
+
+    /* Messages Area */
+    .ai-messages { flex: 1; overflow-y: auto; padding: 8px 0; display: flex; flex-direction: column; gap: 12px; }
+    .ai-msg { display: flex; gap: 8px; max-width: 82%; animation: msg-in .25s ease; }
+    @keyframes msg-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .ai-msg--user { align-self: flex-end; flex-direction: row-reverse; }
+    .ai-msg__avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .ai-msg--ai .ai-msg__avatar { background: linear-gradient(135deg, #e54f37, #ff8c42); color: #fff; }
+    .ai-msg--user .ai-msg__avatar { background: #e0e0e0; }
+    .ai-msg__bubble { padding: 10px 14px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; word-break: break-word; }
+    .ai-msg--ai .ai-msg__bubble { background: #f5f5f5; border-top-left-radius: 4px; color: #222; }
+    .ai-msg--user .ai-msg__bubble { background: linear-gradient(135deg, #e54f37, #d4432b); color: #fff; border-top-right-radius: 4px; }
+    .ai-msg__bubble p { margin: 0 0 6px; } .ai-msg__bubble p:last-child { margin: 0; }
+    .ai-msg__bubble ul, .ai-msg__bubble ol { margin: 4px 0; padding-left: 18px; }
+    .ai-msg__bubble li { margin: 2px 0; }
+    .ai-msg__bubble code { background: rgba(0,0,0,.06); padding: 1px 4px; border-radius: 3px; font-size: 12.5px; }
+
+    /* Typing indicator */
+    .ai-typing { display: flex; gap: 4px; padding: 12px 16px; }
+    .ai-typing span { width: 7px; height: 7px; border-radius: 50%; background: #ccc; animation: typing-bounce .6s ease-in-out infinite; }
+    .ai-typing span:nth-child(2) { animation-delay: .15s; } .ai-typing span:nth-child(3) { animation-delay: .3s; }
+    @keyframes typing-bounce { 0%, 100% { transform: translateY(0); background: #ccc; } 50% { transform: translateY(-5px); background: #e54f37; } }
+
+    /* Input Area */
+    .ai-input-area { display: flex; gap: 8px; padding: 12px 0 4px; border-top: 1px solid #eee; }
+    .ai-input-area input { flex: 1; padding: 10px 16px; border: 1.5px solid #e0e0e0; border-radius: 25px; font-size: 13.5px; outline: none; transition: border-color .2s; background: #fafafa; }
+    .ai-input-area input:focus { border-color: #e54f37; background: #fff; }
+    .ai-input-area button { width: 42px; height: 42px; border-radius: 50%; border: none; background: linear-gradient(135deg, #e54f37, #d4432b); color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform .15s; }
+    .ai-input-area button:hover { transform: scale(1.06); }
+    .ai-input-area button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .ai-status { text-align: center; font-size: 11px; color: #aaa; padding: 3px 0; }
+    .ai-status--error { color: #e54f37; }
+</style>
+
+<div class="ai-chat-wrapper">
+    <div class="ai-chat-header">
+        <span class="ai-chat-header__icon">🤖</span>
+        <h2>{% trans "WorkAura AI Assistant" %}</h2>
+        <p>{% trans "AI-powered workforce intelligence — 24/7 HR companion" %}</p>
+    </div>
+
+    <div class="ai-nav">
+        <a href="{% url 'ai-assistant' %}" class="active">🤖 {% trans "AI Chat" %}</a>
+        <a href="{% url 'ai-dashboard' %}">🏢 {% trans "Org Health Dashboard" %}</a>
+    </div>
+
+    <div class="ai-capabilities" id="aiCaps">
+        <div class="ai-cap-card" onclick="sendChip('How many employees do we have? Show department breakdown')">
+            <span class="ai-cap-card__icon">👥</span>
+            <div><strong>{% trans "Employee Data" %}</strong><span>{% trans "Profiles & headcount" %}</span></div>
+        </div>
+        <div class="ai-cap-card" onclick="sendChip('Analyze burnout risk for all employees')">
+            <span class="ai-cap-card__icon">🔥</span>
+            <div><strong>{% trans "Burnout Detection" %}</strong><span>{% trans "Risk assessment" %}</span></div>
+        </div>
+        <div class="ai-cap-card" onclick="sendChip('Show organization health summary')">
+            <span class="ai-cap-card__icon">🏢</span>
+            <div><strong>{% trans "Org Health" %}</strong><span>{% trans "Company-wide insights" %}</span></div>
+        </div>
+        <div class="ai-cap-card" onclick="sendChip('Show leave requests summary and pending approvals')">
+            <span class="ai-cap-card__icon">📋</span>
+            <div><strong>{% trans "Leave & Attendance" %}</strong><span>{% trans "Balance & reports" %}</span></div>
+        </div>
+        <div class="ai-cap-card" onclick="sendChip('Show recruitment pipeline summary')">
+            <span class="ai-cap-card__icon">🎯</span>
+            <div><strong>{% trans "Recruitment" %}</strong><span>{% trans "Pipeline & hiring" %}</span></div>
+        </div>
+        <div class="ai-cap-card" onclick="sendChip('Analyze this complaint: Employee says workload is unmanageable and they feel ignored by management')">
+            <span class="ai-cap-card__icon">📝</span>
+            <div><strong>{% trans "Complaint Analysis" %}</strong><span>{% trans "Classify & assess" %}</span></div>
+        </div>
+        <div class="ai-cap-card" onclick="sendChip('Write a performance summary for the team')">
+            <span class="ai-cap-card__icon">📈</span>
+            <div><strong>{% trans "Performance Narrator" %}</strong><span>{% trans "Auto-write reviews" %}</span></div>
+        </div>
+        <div class="ai-cap-card" onclick="sendChip('Suggest HR actions for an employee with high overtime and low morale')">
+            <span class="ai-cap-card__icon">⚡</span>
+            <div><strong>{% trans "Action Engine" %}</strong><span>{% trans "Smart recommendations" %}</span></div>
+        </div>
+        <div class="ai-cap-card" onclick="sendChip('Analyse this resume: 5 years Python developer, Django expert, BS Computer Science. Rate for senior backend developer role.')">
+            <span class="ai-cap-card__icon">📄</span>
+            <div><strong>{% trans "Resume Analysis" %}</strong><span>{% trans "CV scoring" %}</span></div>
+        </div>
+        <div class="ai-cap-card" onclick="sendChip('What is the leave policy? How many casual and sick leaves are allowed?')">
+            <span class="ai-cap-card__icon">📖</span>
+            <div><strong>{% trans "HR Policies" %}</strong><span>{% trans "Rules & guidelines" %}</span></div>
+        </div>
+    </div>
+
+    <div class="ai-messages" id="aiMessages">
+        <div class="ai-msg ai-msg--ai">
+            <div class="ai-msg__avatar">🤖</div>
+            <div class="ai-msg__bubble">
+                👋 <strong>{% trans "Hello! I'm WorkAura AI" %}</strong> — {% trans "your intelligent HR assistant." %}
+                <br><br>{% trans "I can help you with:" %}
+                <ul>
+                    <li>🔥 {% trans "Burnout risk detection & wellbeing analysis" %}</li>
+                    <li>🏢 {% trans "Organization health insights" %}</li>
+                    <li>📝 {% trans "Complaint classification & risk assessment" %}</li>
+                    <li>📈 {% trans "AI-generated performance reviews" %}</li>
+                    <li>⚡ {% trans "Smart HR action recommendations" %}</li>
+                    <li>👥 {% trans "Employee data, leave, attendance & payroll" %}</li>
+                    <li>📄 {% trans "Resume analysis & candidate scoring" %}</li>
+                    <li>📖 {% trans "HR policy guidance" %}</li>
+                </ul>
+                {% trans "Click a card above or ask me anything!" %}
+            </div>
+        </div>
+    </div>
+
+    <div class="ai-status" id="aiStatus"></div>
+
+    <div class="ai-input-area">
+        <input type="text" id="aiInput" placeholder="{% trans 'Ask about burnout risk, org health, performance, complaints...' %}" autocomplete="off" onkeydown="if(event.key==='Enter')sendMessage()">
+        <button onclick="sendMessage()" id="aiSendBtn" title="{% trans 'Send' %}"><ion-icon name="send-outline"></ion-icon></button>
+    </div>
+</div>
+
+<script>
+(function() {
+    const messagesEl = document.getElementById('aiMessages');
+    const inputEl = document.getElementById('aiInput');
+    const sendBtn = document.getElementById('aiSendBtn');
+    const statusEl = document.getElementById('aiStatus');
+    const capsEl = document.getElementById('aiCaps');
+    let chatHistory = [], isSending = false;
+
+    window.sendChip = function(text) { inputEl.value = text; sendMessage(); };
+
+    window.sendMessage = function() {
+        const msg = inputEl.value.trim();
+        if (!msg || isSending) return;
+        capsEl.style.display = 'none';
+        appendMessage('user', msg);
+        chatHistory.push({ role: 'user', content: msg });
+        inputEl.value = '';
+        isSending = true; sendBtn.disabled = true;
+        const typingEl = showTyping();
+        statusEl.textContent = '🧠 WorkAura AI is analyzing...';
+        statusEl.className = 'ai-status';
+
+        fetch('{% url "ai-assistant-chat" %}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ message: msg, history: chatHistory })
+        })
+        .then(r => r.json())
+        .then(data => {
+            typingEl.remove();
+            if (data.error) {
+                appendMessage('ai', '⚠️ ' + data.error);
+                statusEl.textContent = 'Error occurred';
+                statusEl.className = 'ai-status ai-status--error';
+            } else {
+                const reply = data.reply || 'No response.';
+                appendMessage('ai', reply);
+                chatHistory.push({ role: 'assistant', content: reply });
+                statusEl.textContent = '✅ Ready';
+            }
+        })
+        .catch(() => {
+            typingEl.remove();
+            appendMessage('ai', '⚠️ Could not connect to AI. Make sure Ollama is running.');
+            statusEl.textContent = '❌ Connection failed';
+            statusEl.className = 'ai-status ai-status--error';
+        })
+        .finally(() => { isSending = false; sendBtn.disabled = false; inputEl.focus(); });
+    };
+
+    function appendMessage(role, text) {
+        const w = document.createElement('div');
+        w.className = 'ai-msg ai-msg--' + (role === 'user' ? 'user' : 'ai');
+        w.innerHTML = `<div class="ai-msg__avatar">${role === 'user' ? '👤' : '🤖'}</div><div class="ai-msg__bubble">${formatMd(text)}</div>`;
+        messagesEl.appendChild(w);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function showTyping() {
+        const w = document.createElement('div');
+        w.className = 'ai-msg ai-msg--ai';
+        w.innerHTML = '<div class="ai-msg__avatar">🤖</div><div class="ai-msg__bubble"><div class="ai-typing"><span></span><span></span><span></span></div></div>';
+        messagesEl.appendChild(w);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        return w;
+    }
+
+    function formatMd(t) {
+        return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g,'<em>$1</em>')
+            .replace(/`(.+?)`/g,'<code>$1</code>')
+            .replace(/^#{1,3}\s+(.+)/gm,'<strong>$1</strong>')
+            .replace(/^[\-\•]\s+(.+)/gm,'<li>$1</li>')
+            .replace(/^\d+\.\s+(.+)/gm,'<li>$1</li>')
+            .replace(/\n/g,'<br>')
+            .replace(/((?:<li>.*?<\/li><br>?)+)/g,'<ul>$1</ul>');
+    }
+})();
+</script>
+{% endblock content %}

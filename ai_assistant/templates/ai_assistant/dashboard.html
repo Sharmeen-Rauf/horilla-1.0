@@ -1,0 +1,246 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<style>
+    .ai-dash { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+    /* Header */
+    .ai-dash__header { text-align: center; margin-bottom: 24px; }
+    .ai-dash__header h2 { font-size: 24px; font-weight: 700; margin: 0; color: var(--oh-text-color, #1c1c1c); }
+    .ai-dash__header p { font-size: 13px; color: #888; margin: 4px 0 0; }
+
+    /* Score Card */
+    .ai-dash__score-card {
+        text-align: center;
+        padding: 30px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        color: #fff;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    .ai-dash__score-card::before {
+        content: ''; position: absolute; top: -50%; right: -30%;
+        width: 300px; height: 300px; border-radius: 50%;
+        background: rgba(229,79,55,.15);
+    }
+    .ai-dash__score-num {
+        font-size: 64px; font-weight: 800; line-height: 1;
+        background: linear-gradient(135deg, #e54f37, #ff8c42);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .ai-dash__score-label { font-size: 16px; opacity: .8; margin-top: 4px; }
+    .ai-dash__score-status {
+        display: inline-block; padding: 4px 16px; border-radius: 20px;
+        font-size: 13px; font-weight: 600; margin-top: 10px;
+    }
+    .status-excellent { background: #10b981; color: #fff; }
+    .status-good { background: #3b82f6; color: #fff; }
+    .status-fair { background: #f59e0b; color: #fff; }
+    .status-concerning { background: #f97316; color: #fff; }
+    .status-critical { background: #ef4444; color: #fff; }
+
+    /* Grid */
+    .ai-dash__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px; margin-bottom: 20px;
+    }
+
+    /* Cards */
+    .ai-dash__card {
+        background: #fff; border: 1px solid #eee; border-radius: 14px;
+        padding: 20px; transition: box-shadow .2s;
+    }
+    .ai-dash__card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.06); }
+    .ai-dash__card-header {
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 14px; font-size: 15px; font-weight: 600;
+    }
+    .ai-dash__card-icon { font-size: 24px; }
+    .ai-dash__card ul { list-style: none; padding: 0; margin: 0; }
+    .ai-dash__card li {
+        padding: 8px 0; border-bottom: 1px solid #f5f5f5;
+        font-size: 13.5px; color: #444; line-height: 1.4;
+    }
+    .ai-dash__card li:last-child { border: none; }
+
+    /* Alert badges */
+    .ai-badge {
+        display: inline-block; padding: 2px 10px; border-radius: 12px;
+        font-size: 11px; font-weight: 600;
+    }
+    .ai-badge--high { background: #fef2f2; color: #dc2626; }
+    .ai-badge--medium { background: #fffbeb; color: #d97706; }
+    .ai-badge--low { background: #f0fdf4; color: #16a34a; }
+    .ai-badge--immediate { background: #dc2626; color: #fff; }
+    .ai-badge--soon { background: #f59e0b; color: #fff; }
+    .ai-badge--planned { background: #3b82f6; color: #fff; }
+
+    /* Loading */
+    .ai-dash__loading {
+        text-align: center; padding: 60px 20px; color: #888;
+    }
+    .ai-dash__loading-spinner {
+        width: 40px; height: 40px; border: 4px solid #eee;
+        border-top-color: #e54f37; border-radius: 50%;
+        animation: spin 1s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Summary */
+    .ai-dash__summary {
+        background: #f8f9fa; border-radius: 12px; padding: 18px;
+        font-size: 14px; line-height: 1.6; color: #333; margin-bottom: 20px;
+    }
+
+    /* Refresh button */
+    .ai-dash__refresh {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 20px; border-radius: 8px; border: 1px solid #e0e0e0;
+        background: #fff; cursor: pointer; font-size: 13px; color: #555;
+        transition: all .2s;
+    }
+    .ai-dash__refresh:hover {
+        border-color: #e54f37; color: #e54f37;
+    }
+
+    .ai-dash__footer {
+        text-align: center; padding: 12px 0;
+        font-size: 11px; color: #bbb;
+    }
+</style>
+
+<div class="ai-dash">
+    <div class="ai-dash__header">
+        <h2>🏢 {% trans "Organization Health Dashboard" %}</h2>
+        <p>{% trans "AI-powered workforce intelligence — real-time insights from your HR data" %}</p>
+    </div>
+
+    <div id="dashContent">
+        <div class="ai-dash__loading" id="dashLoading">
+            <div class="ai-dash__loading-spinner"></div>
+            <p>🧠 {% trans "AI is analyzing your organization data..." %}</p>
+            <p style="font-size:12px">{% trans "This may take 15-30 seconds on first load" %}</p>
+        </div>
+    </div>
+
+    <div style="text-align:center; margin-top:12px;">
+        <button class="ai-dash__refresh" onclick="loadDashboard()">
+            🔄 {% trans "Refresh Analysis" %}
+        </button>
+        <a href="{% url 'ai-assistant' %}" class="ai-dash__refresh" style="text-decoration:none; margin-left:8px;">
+            🤖 {% trans "Open AI Chat" %}
+        </a>
+    </div>
+
+    <div class="ai-dash__footer">
+        {% trans "Powered by WorkAura AI • Data refreshed on request • Signals, not diagnoses" %}
+    </div>
+</div>
+
+<script>
+function loadDashboard() {
+    const container = document.getElementById('dashContent');
+    container.innerHTML = `
+        <div class="ai-dash__loading" id="dashLoading">
+            <div class="ai-dash__loading-spinner"></div>
+            <p>🧠 AI is analyzing your organization data...</p>
+        </div>`;
+
+    fetch('{% url "ai-org-health" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            container.innerHTML = `<div class="ai-dash__summary">⚠️ ${data.error}</div>`;
+            return;
+        }
+        renderDashboard(data.result);
+    })
+    .catch(err => {
+        container.innerHTML = `<div class="ai-dash__summary">⚠️ Could not connect to AI service. Make sure Ollama is running.</div>`;
+    });
+}
+
+function renderDashboard(r) {
+    const container = document.getElementById('dashContent');
+    const score = r.health_score || 0;
+    const status = r.health_status || 'unknown';
+    const statusClass = 'status-' + status;
+
+    let html = '';
+
+    // Score card
+    html += `
+    <div class="ai-dash__score-card">
+        <div class="ai-dash__score-num">${score}</div>
+        <div class="ai-dash__score-label">Organization Health Score</div>
+        <span class="ai-dash__score-status ${statusClass}">${status.toUpperCase()}</span>
+    </div>`;
+
+    // Summary
+    if (r.summary) {
+        html += `<div class="ai-dash__summary">📝 <strong>Executive Summary:</strong> ${r.summary}</div>`;
+    }
+
+    html += '<div class="ai-dash__grid">';
+
+    // Key Insights
+    if (r.key_insights && r.key_insights.length) {
+        html += `
+        <div class="ai-dash__card">
+            <div class="ai-dash__card-header"><span class="ai-dash__card-icon">💡</span> Key Insights</div>
+            <ul>${r.key_insights.map(i => `<li>💡 ${i}</li>`).join('')}</ul>
+        </div>`;
+    }
+
+    // Risk Alerts
+    if (r.risk_alerts && r.risk_alerts.length) {
+        html += `
+        <div class="ai-dash__card">
+            <div class="ai-dash__card-header"><span class="ai-dash__card-icon">⚠️</span> Risk Alerts</div>
+            <ul>${r.risk_alerts.map(a =>
+                `<li><span class="ai-badge ai-badge--${a.severity || 'medium'}">${(a.severity || '').toUpperCase()}</span>
+                 <strong>${a.type || ''}</strong>: ${a.message || ''}</li>`
+            ).join('')}</ul>
+        </div>`;
+    }
+
+    // Recommended Actions
+    if (r.recommended_actions && r.recommended_actions.length) {
+        html += `
+        <div class="ai-dash__card">
+            <div class="ai-dash__card-header"><span class="ai-dash__card-icon">⚡</span> Recommended Actions</div>
+            <ul>${r.recommended_actions.map(a =>
+                `<li><span class="ai-badge ai-badge--${a.priority || 'planned'}">${(a.priority || '').toUpperCase()}</span>
+                 ${a.action || ''} ${a.reason ? '<br><small style="color:#888">' + a.reason + '</small>' : ''}</li>`
+            ).join('')}</ul>
+        </div>`;
+    }
+
+    // Department Highlights
+    if (r.department_highlights && r.department_highlights.length) {
+        html += `
+        <div class="ai-dash__card">
+            <div class="ai-dash__card-header"><span class="ai-dash__card-icon">🏬</span> Department Highlights</div>
+            <ul>${r.department_highlights.map(d => `<li>📌 ${d}</li>`).join('')}</ul>
+        </div>`;
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Auto-load on page ready
+document.addEventListener('DOMContentLoaded', loadDashboard);
+</script>
+{% endblock content %}
