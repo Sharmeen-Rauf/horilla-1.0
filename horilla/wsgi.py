@@ -15,17 +15,39 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "horilla.settings")
 if os.environ.get("VERCEL"):
     db_path = "/tmp/db.sqlite3"
     source_db = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "db.sqlite3")
-    # Copy the pre-seeded DB on first cold start
-    if os.path.exists(source_db) and not os.path.exists(db_path):
-        shutil.copy2(source_db, db_path)
-    # Always run migrations to ensure all tables exist
+    
+    print(f"DEBUG: VERCEL detected. source_db: {source_db}, db_path: {db_path}")
+    
+    if os.path.exists(source_db):
+        if not os.path.exists(db_path):
+            try:
+                shutil.copy2(source_db, db_path)
+                print(f"DEBUG: Copied {source_db} to {db_path}")
+            except Exception as e:
+                print(f"ERROR: Failed to copy DB: {e}")
+        else:
+            print(f"DEBUG: {db_path} already exists.")
+    else:
+        print(f"WARNING: {source_db} not found!")
+
+    # Always ensure django is setup and migrations are run
     import django
     django.setup()
     from django.core.management import call_command
     try:
-        call_command("migrate", "--run-syncdb", verbosity=0)
-    except Exception:
-        pass
+        print("DEBUG: Running migrations...")
+        # Use migrate --noinput to avoid hanging, and removed --run-syncdb for standard apps
+        call_command("migrate", "--noinput")
+        print("DEBUG: Migrations finished.")
+    except Exception as e:
+        print(f"ERROR: Migration failed: {e}")
+        # Fallback if standard migrate fails (e.g. for dynamic apps)
+        try:
+            print("DEBUG: Attempting migrate --run-syncdb...")
+            call_command("migrate", "--run-syncdb", "--noinput")
+            print("DEBUG: migrate --run-syncdb finished.")
+        except Exception as e2:
+            print(f"ERROR: Fallback migration failed: {e2}")
 
 from django.core.wsgi import get_wsgi_application
 
