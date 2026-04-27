@@ -6,11 +6,10 @@
       "use": "@vercel/python"
     }
   ],
-  "routes": [
-    { "handle": "filesystem" },
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "horilla/wsgi.py"
+      "source": "/(.*)",
+      "destination": "horilla/wsgi.py"
     }
   ]
 }
