@@ -5,10 +5,8 @@ venv/
 .venv/
 env/
 .env/
-db.sqlite3
-db.sqlite3-journal
-TestDB_Horilla.sqlite3
 .git/
+
 .gitignore
 .vercel/
 .chroma_helpdesk/
