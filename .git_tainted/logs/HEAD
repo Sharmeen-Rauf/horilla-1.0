@@ -1,0 +1,8 @@
+0000000000000000000000000000000000000000 0dc20ea8ee01279040a8c7c1fc7d2e2d9505946d Sharmeen-Rauf <sharmeenpakistan8@gmail.com> 1776957899 +0500	commit (initial): Initialize project with core modules
+0dc20ea8ee01279040a8c7c1fc7d2e2d9505946d 0000000000000000000000000000000000000000 Sharmeen-Rauf <sharmeenpakistan8@gmail.com> 1776957920 +0500	Branch: renamed refs/heads/main to refs/heads/main
+0dc20ea8ee01279040a8c7c1fc7d2e2d9505946d 0dc20ea8ee01279040a8c7c1fc7d2e2d9505946d Sharmeen-Rauf <sharmeenpakistan8@gmail.com> 1776957920 +0500	Branch: renamed refs/heads/main to refs/heads/main
+0dc20ea8ee01279040a8c7c1fc7d2e2d9505946d 744a11cde45ac0db0dc19ddc9684c3184872817a Sharmeen-Rauf <sharmeenpakistan8@gmail.com> 1776957941 +0500	commit: Add static assets
+744a11cde45ac0db0dc19ddc9684c3184872817a 11e285c79028d6b06a26bc15088f7497fb1de491 Sharmeen-Rauf <sharmeenpakistan8@gmail.com> 1776958162 +0500	commit: Exclude bloated ionicons directory from tracking
+11e285c79028d6b06a26bc15088f7497fb1de491 0dc20ea8ee01279040a8c7c1fc7d2e2d9505946d Sharmeen-Rauf <sharmeenpakistan8@gmail.com> 1776958944 +0500	reset: moving to 0dc20ea
+0dc20ea8ee01279040a8c7c1fc7d2e2d9505946d 21f7e167f3b0ec970c1a1351b6f50ed256cbe77e Sharmeen-Rauf <sharmeenpakistan8@gmail.com> 1776959059 +0500	commit: Add static assets (excluding bloated ionicons)
+21f7e167f3b0ec970c1a1351b6f50ed256cbe77e 21f7e167f3b0ec970c1a1351b6f50ed256cbe77e Sharmeen-Rauf <sharmeenpakistan8@gmail.com> 1776959242 +0500	reset: moving to HEAD

@@ -1,0 +1,13 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	symlinks = false
+	ignorecase = true
+[user]
+	email = sharmeenpakistan8@gmail.com
+	name = Sharmeen-Rauf
+[remote "origin"]
+	url = https://github.com/Sharmeen-Rauf/horilla-1.0.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
