@@ -127,11 +127,11 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": env("DB_ENGINE", default="django.db.backends.sqlite3"),
-            "NAME": env(
+            "NAME": "/tmp/db.sqlite3" if os.environ.get("VERCEL") else env(
                 "DB_NAME",
                 default=os.path.join(
                     BASE_DIR,
-                    "TestDB_Horilla.sqlite3",
+                    "db.sqlite3",
                 ),
             ),
             "USER": env("DB_USER", default=""),
