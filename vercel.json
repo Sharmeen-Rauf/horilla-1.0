@@ -3,15 +3,11 @@
   "builds": [
     {
       "src": "horilla/wsgi.py",
-      "use": "@vercel/python",
-      "config": { "runtime": "python3.12" }
+      "use": "@vercel/python"
     }
   ],
   "routes": [
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
+    { "handle": "filesystem" },
     {
       "src": "/(.*)",
       "dest": "horilla/wsgi.py"
