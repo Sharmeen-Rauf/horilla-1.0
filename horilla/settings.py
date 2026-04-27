@@ -41,7 +41,7 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*", ".vercel.app", ".railway.app", "localhost", "127.0.0.1"])
 
 # Ollama (local LLM)
 OLLAMA_BASE_URL = env("OLLAMA_BASE_URL", default="http://localhost:11434")
@@ -125,20 +125,10 @@ if env("DATABASE_URL", default=None):
     }
 else:
     DATABASES = {
-        "default": {
-            "ENGINE": env("DB_ENGINE", default="django.db.backends.sqlite3"),
-            "NAME": "/tmp/db.sqlite3" if os.environ.get("VERCEL") else env(
-                "DB_NAME",
-                default=os.path.join(
-                    BASE_DIR,
-                    "db.sqlite3",
-                ),
-            ),
-            "USER": env("DB_USER", default=""),
-            "PASSWORD": env("DB_PASSWORD", default=""),
-            "HOST": env("DB_HOST", default=""),
-            "PORT": env("DB_PORT", default=""),
-        }
+        "default": env.db(
+            "DATABASE_URL",
+            default=f"sqlite:///{'/tmp/db.sqlite3' if os.environ.get('VERCEL') else os.path.join(BASE_DIR, 'db.sqlite3')}",
+        )
     }
 
 # Password validation
