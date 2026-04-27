@@ -1,5 +1,4 @@
 APScheduler
-chromadb
 arabic-reshaper
 asgiref
 asn1crypto
@@ -32,16 +31,6 @@ et-xmlfile
 future
 geographiclib
 geopy
-google-api-core
-google-api-python-client
-google-auth
-google-auth-httplib2
-google-auth-oauthlib
-google-cloud-core
-google-cloud-storage
-google-crc32c
-google-resumable-media
-googleapis-common-protos
 gunicorn
 horillasetup
 html5lib

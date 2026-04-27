@@ -79,73 +79,19 @@ def _get_settings():
 def build_or_update_faq_index(faqs: Iterable, rebuild: bool = False) -> int:
     """
     Build (or update) the persisted FAQ index.
-
-    Returns number of chunks upserted.
+    (Disabled for Vercel deployment to reduce bundle size)
     """
-    import chromadb
-
-    persist_dir, collection_name, ollama_base, embed_model, timeout = _get_settings()
-    client = chromadb.PersistentClient(path=persist_dir)
-
-    if rebuild:
-        try:
-            client.delete_collection(collection_name)
-        except Exception:
-            pass
-
-    col = client.get_or_create_collection(name=collection_name)
-
-    ids: list[str] = []
-    docs: list[str] = []
-    metas: list[dict] = []
-
-    for faq in faqs:
-        chunks = _chunk_text(faq.answer)
-        for idx, ch in enumerate(chunks):
-            doc = f"Q: {faq.question}\nA: {ch}"
-            ids.append(_stable_id(str(faq.id), str(idx), faq.question, ch))
-            docs.append(doc)
-            metas.append(
-                {
-                    "faq_id": int(faq.id),
-                    "question": faq.question,
-                    "chunk_index": idx,
-                }
-            )
-
-    if not ids:
-        return 0
-
-    embeddings = _ollama_embeddings(docs, ollama_base, embed_model, timeout)
-    col.upsert(ids=ids, documents=docs, metadatas=metas, embeddings=embeddings)
-    return len(ids)
+    import logging
+    logging.getLogger(__name__).warning("ChromaDB FAQ indexing disabled for Vercel deployment.")
+    return 0
 
 
 def retrieve_faq_chunks(query: str, k: int = 4) -> list[RetrievedChunk]:
     """
     Retrieve top-k FAQ chunks relevant to the query.
+    (Disabled for Vercel deployment to reduce bundle size)
     """
-    import chromadb
-
-    persist_dir, collection_name, ollama_base, embed_model, timeout = _get_settings()
-    client = chromadb.PersistentClient(path=persist_dir)
-    col = client.get_or_create_collection(name=collection_name)
-
-    emb = _ollama_embeddings([query], ollama_base, embed_model, timeout)[0]
-    res = col.query(query_embeddings=[emb], n_results=k, include=["documents", "metadatas", "distances"])
-
-    docs = (res.get("documents") or [[]])[0]
-    metas = (res.get("metadatas") or [[]])[0]
-    dists = (res.get("distances") or [[]])[0]
-
-    out: list[RetrievedChunk] = []
-    for doc, meta, dist in zip(docs, metas, dists):
-        faq_id = int(meta.get("faq_id", 0) or 0)
-        question = meta.get("question", "") or ""
-        # Chroma returns distances (lower = closer). Convert to a rough score.
-        score = float(1 / (1 + float(dist))) if dist is not None else 0.0
-        # extract answer chunk if doc formatted as Q/A
-        answer_chunk = doc.split("\nA:", 1)[-1].strip() if isinstance(doc, str) else ""
-        out.append(RetrievedChunk(faq_id=faq_id, question=question, answer_chunk=answer_chunk, score=score))
-    return out
+    import logging
+    logging.getLogger(__name__).warning("ChromaDB FAQ retrieval disabled for Vercel deployment.")
+    return []
 
