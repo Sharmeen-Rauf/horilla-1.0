@@ -1,0 +1,38 @@
+# Vercel Ignore File
+# Exclude local environments and large files that shouldn't be in the Lambda bundle
+
+venv/
+.venv/
+env/
+.env/
+db.sqlite3
+db.sqlite3-journal
+.git/
+.gitignore
+.vercel/
+.chroma_helpdesk/
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.log
+*.pot
+*.mo
+/site
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+/site
+static/images/ionicons/
+
+# Documentation and meta
+README.md
+LICENSE
+CODE_OF_CONDUCT.md
+SECURITY.md
+DOCUMENTATION.md
+tmp_load.py
+test_analyzers.py
